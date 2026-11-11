@@ -206,9 +206,15 @@ Com o ambiente virtual ativado, execute:
 pytest
 ```
 
-## Privacidade e uso dos dados
+## Fonte e disponibilidade dos dados
 
-O projeto utiliza resultados de sorteios disponibilizados publicamente pela Nota Fiscal Goiana.
+Os dados utilizados neste projeto foram obtidos a partir dos resultados oficiais dos sorteios da [Nota Fiscal Goiana](https://goias.gov.br/nfgoiana/), disponibilizados publicamente pelo Governo do Estado de Goiás.
+
+Os arquivos foram consolidados e padronizados em uma base histórica para permitir análises e visualizações sobre os sorteios, ganhadores, municípios e valores distribuídos.
+
+A base CSV está disponível neste repositório para permitir que qualquer pessoa execute o projeto e reproduza as análises.
+
+**Observação:** os dados são provenientes de publicações oficiais, mas podem conter inconsistências de extração ou tratamento. As datas estimadas e os registros pendentes de validação estão identificados na documentação do projeto.
 
 ## Contribuições
 

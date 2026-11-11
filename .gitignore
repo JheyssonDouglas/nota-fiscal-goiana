@@ -14,7 +14,6 @@ venv/
 .streamlit/secrets.toml
 
 # Dados locais - não publicar no GitHub
-data/*.csv
 data/raw/*
 !data/raw/.gitkeep
 
