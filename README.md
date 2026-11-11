@@ -208,29 +208,8 @@ pytest
 
 ## Privacidade e uso dos dados
 
-Os resultados podem conter nomes de pessoas e informações associadas a municípios e premiações. A disponibilidade de uma informação em fonte pública não significa, por si só, que qualquer forma de republicação ou tratamento seja automaticamente adequada.
-
-Antes de publicar a base CSV no GitHub, avalie a finalidade do projeto, a necessidade de disponibilizar os dados identificáveis e os requisitos aplicáveis da LGPD. Por padrão, mantenha a base completa e os PDFs fora do repositório. Para demonstração pública, prefira dados agregados ou uma amostra adequadamente anonimizada.
-
-## Roadmap
-
-- [x] Estrutura inicial do projeto.
-- [x] Leitura e padronização da base CSV.
-- [x] Dashboard inicial em Streamlit.
-- [x] Ranking de municípios com opção de excluir Goiânia.
-- [x] Ranking de ganhadores com relação dos sorteios em que aparecem.
-- [x] Separação visual dos prêmios menores e maiores.
-- [ ] Revisão e validação de inconsistências na base histórica.
-- [ ] Coleta automática de novos resultados oficiais.
-- [ ] Extração robusta de PDFs com diferentes layouts.
-- [ ] Atualização incremental do CSV com backup e prevenção de duplicidades.
-- [ ] Testes automatizados do processo de ingestão.
-- [ ] Publicação do dashboard.
+O projeto utiliza resultados de sorteios disponibilizados publicamente pela Nota Fiscal Goiana.
 
 ## Contribuições
 
 Sugestões, identificação de problemas e melhorias são bem-vindas. Abra uma *Issue* descrevendo o problema ou a proposta antes de enviar alterações maiores.
-
-## Licença
-
-A licença ainda não foi definida. Até que uma licença seja adicionada ao repositório, todos os direitos sobre o código permanecem reservados ao autor.
