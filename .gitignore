@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.log
+
+# Ambientes virtuais
+.venv/
+venv/
+
+# Variáveis de ambiente e segredos
+.env
+.env.*
+.streamlit/secrets.toml
+
+# Dados locais - não publicar no GitHub
+data/*.csv
+data/raw/*
+!data/raw/.gitkeep
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
