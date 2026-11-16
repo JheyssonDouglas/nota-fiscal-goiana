@@ -6,7 +6,7 @@
 
 Projeto de análise histórica dos sorteios da **Nota Fiscal Goiana**, desenvolvido em Python e Streamlit. O objetivo é transformar os resultados publicados em uma base histórica organizada e em visualizações simples, permitindo explorar ganhadores, municípios, valores distribuídos e recorrência de premiações.
 
-> **Status:** o dashboard analítico está em desenvolvimento. A rotina de coleta automática e atualização incremental dos novos sorteios ainda será implementada.
+> **Status:** dashboard analítico disponível e rotina de atualização incremental por PDFs implementada. O download dos PDFs oficiais ainda é manual; a extração e a atualização do CSV são realizadas pelo script.
 
 ---
 
@@ -18,7 +18,7 @@ Projeto de análise histórica dos sorteios da **Nota Fiscal Goiana**, desenvolv
 - Comparar os resultados com e sem Goiânia no ranking municipal.
 - Identificar nomes que aparecem em mais de um sorteio.
 - Analisar a distribuição dos valores dos prêmios.
-- Preparar uma rotina para buscar novos resultados e atualizar a base sem duplicar registros.
+- Atualizar a base histórica a partir dos PDFs oficiais, evitando duplicidades e preservando um backup.
 
 ## Funcionalidades do dashboard
 
@@ -57,8 +57,8 @@ Projeto de análise histórica dos sorteios da **Nota Fiscal Goiana**, desenvolv
 - **Pandas** — leitura, tratamento e análise dos dados.
 - **Streamlit** — aplicação web e interface interativa.
 - **Plotly** — gráficos interativos.
-- **Requests e BeautifulSoup** — planejados para localizar e baixar os resultados publicados.
-- **pdfplumber** — planejado para extração de tabelas dos PDFs.
+- **pdfplumber** — extração das tabelas dos PDFs oficiais.
+- **argparse e pathlib** — interface de linha de comando e manipulação dos arquivos.
 - **Pytest** — testes automatizados.
 
 ## Estrutura do projeto
@@ -88,7 +88,7 @@ nota-fiscal-goiana/
 └── README.md
 ```
 
-> A estrutura acima representa a organização prevista para o projeto. Arquivos de dados brutos e a base histórica local não devem ser versionados no Git quando contiverem dados pessoais.
+> A estrutura representa a organização do projeto. O CSV histórico é utilizado pelo dashboard e pelo atualizador. Os PDFs baixados ficam em `data/raw/`; a pasta `data/backups/` é criada automaticamente pelo atualizador.
 
 ## Como executar localmente
 
@@ -155,7 +155,7 @@ O CSV deve conter as colunas:
 | `municipio` | Município do ganhador |
 | `valor` | Valor do prêmio |
 
-**Atenção:** a base histórica não é incluída neste repositório por padrão. Obtenha o arquivo por uma fonte apropriada e salve-o no caminho indicado. O projeto não deve publicar dados pessoais sem avaliar a finalidade, a necessidade e a base legal para essa divulgação.
+A base histórica utilizada pelo projeto deve estar salva exatamente nesse caminho. Neste repositório, o CSV é disponibilizado para que seja possível executar o dashboard e reproduzir as análises. Os resultados têm origem nas publicações oficiais da Nota Fiscal Goiana. Consulte a seção [Fonte e uso dos dados](#fonte-e-uso-dos-dados) para conhecer a origem e as limitações da base.
 
 ### 6. Execute o Streamlit
 
@@ -169,23 +169,83 @@ O Streamlit abrirá o dashboard no navegador. Se isso não acontecer automaticam
 
 ## Atualização dos sorteios
 
-A atualização incremental é uma etapa planejada.
+O projeto possui um script para extrair os dados de um ou mais PDFs oficiais e atualizar o CSV histórico. **Quando executado normalmente, o script atualiza o CSV automaticamente.** Não é necessário editar o arquivo Python para escolher os sorteios: basta informar os números no terminal.
 
-O comportamento desejado é executar um único script após a publicação de um novo resultado. Esse script deverá:
+### 1. Onde colocar os PDFs
 
-1. Consultar a página oficial da Nota Fiscal Goiana.
-2. Identificar os sorteios ainda não presentes na base.
-3. Localizar e baixar os PDFs correspondentes.
-4. Extrair e padronizar os registros.
-5. Validar os campos e a quantidade de ganhadores.
-6. Evitar duplicidades usando uma chave de negócio, inicialmente composta por `sorteio`, `posicao` e `bilhete`.
-7. Criar um backup da base antes da atualização.
-8. Acrescentar os novos registros somente após a validação.
-9. Registrar o resultado da execução.
+Baixe os resultados no site oficial da Nota Fiscal Goiana e salve os arquivos na pasta `data/raw/`, usando este padrão de nome:
 
-O arquivo `scripts_atualizar_sorteios.py`, nesta versão, é apenas um esqueleto de verificação: **ele ainda não realiza a coleta nem altera o CSV**.
+```text
+data/raw/
+├── Resultado_Sorteio_85.pdf
+├── Resultado_Sorteio_86.pdf
+└── Resultado_Sorteio_121.pdf
+```
 
-Alguns resultados podem apresentar mais de um número de sorteio na mesma linha da página oficial, e os PDFs podem ter layouts diferentes. A extração deverá tratar esses casos explicitamente antes de ser considerada confiável.
+O número no nome do arquivo deve corresponder ao número do sorteio. O script não faz o download dos PDFs pela internet: essa etapa ainda é manual.
+
+### 2. Atualizar um único sorteio
+
+Na raiz do projeto, com o ambiente virtual ativado, execute:
+
+```bash
+python scripts_atualizar_sorteios.py --sorteios 121
+```
+
+### 3. Atualizar vários sorteios de uma vez
+
+Informe os números separados por espaço:
+
+```bash
+python scripts_atualizar_sorteios.py --sorteios 85 86
+```
+
+Também é possível informar três ou mais números:
+
+```bash
+python scripts_atualizar_sorteios.py --sorteios 121 122 123
+```
+
+### 4. O CSV é atualizado automaticamente?
+
+**Sim.** Por padrão, depois de extrair e validar todos os PDFs informados, o script:
+
+1. Lê `data/resultados_nota_fiscal_goiana.csv`.
+2. Extrai número do sorteio, data, posição, bilhete, nome, município e valor do prêmio.
+3. Verifica se as posições formam uma sequência contínua e se não há chaves duplicadas nos PDFs.
+4. Compara os registros com a base usando a chave `sorteio + posicao + bilhete`.
+5. Ignora registros que já existem e adiciona somente os novos.
+6. Cria uma cópia de segurança em `data/backups/`.
+7. Grava o CSV atualizado no caminho original, que continua sendo o arquivo utilizado pelo dashboard.
+
+Se houver erro na extração, ausência de arquivo, conflito entre os dados do PDF e os dados já existentes ou falha na validação, o script informa o problema e não grava a atualização. Quando vários sorteios são informados, todos os PDFs são processados e validados antes de qualquer alteração no CSV.
+
+### 5. Simular sem alterar o CSV (dry-run)
+
+Para conferir a extração e saber quantos registros seriam adicionados sem modificar nenhum arquivo, use `--dry-run`:
+
+```bash
+python scripts_atualizar_sorteios.py --sorteios 85 86 --dry-run
+```
+
+Nesse modo, o script mostra a quantidade extraída, os registros novos, os já existentes e o total previsto. **Nenhum CSV é atualizado e nenhum backup é criado.**
+
+### 6. Arquivos e caminhos utilizados
+
+| Arquivo/pasta | Finalidade |
+|---|---|
+| `scripts_atualizar_sorteios.py` | Script de atualização incremental |
+| `data/resultados_nota_fiscal_goiana.csv` | Base histórica atualizada |
+| `data/raw/` | PDFs oficiais baixados manualmente |
+| `data/backups/` | Cópias de segurança criadas antes de cada gravação |
+
+O script também aceita caminhos alternativos, se necessário:
+
+```bash
+python scripts_atualizar_sorteios.py --sorteios 85 --base caminho/para/base.csv --pdf-dir caminho/para/pdfs
+```
+
+**Importante:** o script espera PDFs com tabelas que possam ser extraídas pelo `pdfplumber` e com o padrão de colunas utilizado nos resultados já testados. Outros layouts devem ser validados antes de serem considerados compatíveis.
 
 ## Qualidade e limitações dos dados
 
@@ -193,7 +253,7 @@ Alguns resultados podem apresentar mais de um número de sorteio na mesma linha 
 - `posicao` representa a posição do ganhador dentro de um sorteio.
 - A identificação de ganhadores recorrentes é feita por nome normalizado.
 - Sem CPF ou outro identificador individual, pessoas homônimas podem ser agrupadas incorretamente e variações de grafia podem separar registros da mesma pessoa.
-- Os sorteios 85 e 86 estão pendentes de obtenção dos arquivos oficiais.
+- Os sorteios 85 e 86 foram recuperados e incorporados à base histórica a partir dos PDFs oficiais.
 - O registro informado do sorteio 110 foi incluído manualmente na base histórica.
 - Resultados especiais ou com estrutura diferente devem ser validados individualmente.
 - Indicadores dependem da cobertura e da qualidade da base histórica disponível.
@@ -206,16 +266,28 @@ Com o ambiente virtual ativado, execute:
 pytest
 ```
 
-## Fonte e disponibilidade dos dados
+## Fonte e uso dos dados
 
-Os dados utilizados neste projeto foram obtidos a partir dos resultados oficiais dos sorteios da [Nota Fiscal Goiana](https://goias.gov.br/nfgoiana/), disponibilizados publicamente pelo Governo do Estado de Goiás.
+Os dados utilizados neste projeto foram obtidos a partir dos resultados oficiais dos sorteios da [Nota Fiscal Goiana](https://goias.gov.br/nfgoiana/), disponibilizados publicamente pelo Governo do Estado de Goiás. Os arquivos foram consolidados e padronizados em uma base histórica para permitir análises sobre sorteios, ganhadores, municípios e valores distribuídos.
 
-Os arquivos foram consolidados e padronizados em uma base histórica para permitir análises e visualizações sobre os sorteios, ganhadores, municípios e valores distribuídos.
+A base CSV é disponibilizada neste repositório para permitir a execução do dashboard e a reprodução das análises. Os PDFs originais podem ser baixados diretamente da fonte oficial quando necessário para atualizar a base.
 
-A base CSV está disponível neste repositório para permitir que qualquer pessoa execute o projeto e reproduza as análises.
+## Roadmap
 
-**Observação:** os dados são provenientes de publicações oficiais, mas podem conter inconsistências de extração ou tratamento. As datas estimadas e os registros pendentes de validação estão identificados na documentação do projeto.
+- [x] Estrutura inicial do projeto.
+- [x] Leitura e padronização da base CSV.
+- [x] Dashboard inicial em Streamlit.
+- [x] Ranking de municípios com opção de excluir Goiânia.
+- [x] Ranking de ganhadores com relação dos sorteios em que aparecem.
+- [x] Separação visual dos prêmios menores e maiores.
+- [ ] Revisão e validação de inconsistências na base histórica.
+- [ ] Automatizar a localização e o download dos novos PDFs oficiais.
+- [x] Extração de PDFs dos layouts já validados (incluindo os sorteios 85 e 86).
+- [x] Atualização incremental do CSV com backup e prevenção de duplicidades.
+- [ ] Testes automatizados do processo de ingestão.
+- [ ] Publicação do dashboard.
 
 ## Contribuições
 
 Sugestões, identificação de problemas e melhorias são bem-vindas. Abra uma *Issue* descrevendo o problema ou a proposta antes de enviar alterações maiores.
+
